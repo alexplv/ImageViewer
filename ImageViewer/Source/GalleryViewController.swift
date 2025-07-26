@@ -46,6 +46,8 @@ open class GalleryViewController: UIPageViewController, ItemControllerDelegate {
     fileprivate var seeAllCloseLayout = ButtonLayout.pinRight(8, 16)
     fileprivate var thumbnailsLayout = ButtonLayout.pinLeft(8, 16)
     fileprivate var deleteLayout = ButtonLayout.pinRight(8, 66)
+    fileprivate var headerViewVisibilityMode = VisibilityMode.visible
+    fileprivate var footerViewVisibilityMode = VisibilityMode.visible
     fileprivate var statusBarHidden = true
     fileprivate var overlayAccelerationFactor: CGFloat = 1
     fileprivate var rotationDuration = 0.15
@@ -103,23 +105,12 @@ open class GalleryViewController: UIPageViewController, ItemControllerDelegate {
             case let .rotationDuration(duration): rotationDuration = duration
             case let .rotationMode(mode): rotationMode = mode
             case let .overlayColor(color): overlayView.overlayColor = color
-            case .overlayBlurStyle: break
-            case let .overlayBlurOpacity(opacity): overlayView
-                .blurTargetOpacity = opacity
             case let .overlayColorOpacity(opacity): overlayView
                 .colorTargetOpacity = opacity
-            case let .blurPresentDuration(duration): overlayView
-                .blurPresentDuration = duration
-            case let .blurPresentDelay(delay): overlayView
-                .blurPresentDelay = delay
             case let .colorPresentDuration(duration): overlayView
                 .colorPresentDuration = duration
             case let .colorPresentDelay(delay): overlayView
                 .colorPresentDelay = delay
-            case let .blurDismissDuration(duration): overlayView
-                .blurDismissDuration = duration
-            case let .blurDismissDelay(delay): overlayView
-                .blurDismissDelay = delay
             case let .colorDismissDuration(duration): overlayView
                 .colorDismissDuration = duration
             case let .colorDismissDelay(delay): overlayView
@@ -130,6 +121,8 @@ open class GalleryViewController: UIPageViewController, ItemControllerDelegate {
             case let .videoControlsColor(color): scrubber.tintColor = color
             case let .displacementDuration(duration): displacementDuration =
                 duration
+            case let .headerViewVisible(mode): headerViewVisibilityMode = mode
+            case let .footerViewVisible(mode): footerViewVisibilityMode = mode
             case let .closeButtonMode(buttonMode):
                 switch buttonMode {
                 case .none: closeButton = nil
@@ -227,14 +220,14 @@ open class GalleryViewController: UIPageViewController, ItemControllerDelegate {
     }
 
     fileprivate func configureHeaderView() {
-        if let header = headerView {
+        if let header = headerView, headerViewVisibilityMode == .visible {
             header.alpha = 0
             view.addSubview(header)
         }
     }
 
     fileprivate func configureFooterView() {
-        if let footer = footerView {
+        if let footer = footerView, footerViewVisibilityMode == .visible {
             footer.alpha = 0
             view.addSubview(footer)
         }
@@ -327,8 +320,8 @@ open class GalleryViewController: UIPageViewController, ItemControllerDelegate {
             },
             completion: { [weak self] in
                 guard let self else { return }
-                self.isAnimating = false
-                self.launchedCompletion?()
+                isAnimating = false
+                launchedCompletion?()
             }
         )
     }
@@ -633,8 +626,12 @@ open class GalleryViewController: UIPageViewController, ItemControllerDelegate {
                 .allowAnimatedContent,
             ],
             animations: { [weak self] in
-                self?.headerView?.alpha = 0.0
-                self?.footerView?.alpha = 0.0
+                if self?.headerViewVisibilityMode == .visible {
+                    self?.headerView?.alpha = 0.0
+                }
+                if self?.footerViewVisibilityMode == .visible {
+                    self?.footerView?.alpha = 0.0
+                }
                 self?.closeButton?.alpha = 0.0
                 self?.thumbnailsButton?.alpha = 0.0
                 self?.deleteButton?.alpha = 0.0
@@ -642,7 +639,7 @@ open class GalleryViewController: UIPageViewController, ItemControllerDelegate {
             },
             completion: { [weak self] _ in
                 guard let self,
-                      let itemController = self.viewControllers?
+                      let itemController = viewControllers?
                       .first as? ItemController
                 else {
                     return
@@ -674,8 +671,12 @@ open class GalleryViewController: UIPageViewController, ItemControllerDelegate {
             usingSpringWithDamping: 0.95,
             initialSpringVelocity: 0.0, options: [.beginFromCurrentState],
             animations: { [weak self] in
-                self?.headerView?.alpha = targetAlpha
-                self?.footerView?.alpha = targetAlpha
+                if self?.headerViewVisibilityMode == .visible {
+                    self?.headerView?.alpha = targetAlpha
+                }
+                if self?.footerViewVisibilityMode == .visible {
+                    self?.footerView?.alpha = targetAlpha
+                }
                 self?.closeButton?.alpha = targetAlpha
                 self?.thumbnailsButton?.alpha = targetAlpha
                 self?.deleteButton?.alpha = targetAlpha
@@ -766,8 +767,12 @@ open class GalleryViewController: UIPageViewController, ItemControllerDelegate {
             closeButton?.alpha = alpha
             thumbnailsButton?.alpha = alpha
             deleteButton?.alpha = alpha
-            headerView?.alpha = alpha
-            footerView?.alpha = alpha
+            if headerViewVisibilityMode == .visible {
+                headerView?.alpha = alpha
+            }
+            if footerViewVisibilityMode == .visible {
+                footerView?.alpha = alpha
+            }
             if controller is VideoViewController { scrubber.alpha = alpha }
         }
         overlayView.colorView.alpha = 1 - distance

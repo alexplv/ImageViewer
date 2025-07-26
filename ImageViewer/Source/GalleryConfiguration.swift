@@ -74,12 +74,6 @@ public enum GalleryConfigurationItem {
     /// Sets the duration of the animation when item is double tapped and transitions between ScaleToAspectFit & ScaleToAspectFill sizes.
     case doubleTapToZoomDuration(TimeInterval)
 
-    /// Transition duration for the blur layer component of the overlay when Gallery is being presented.
-    case blurPresentDuration(TimeInterval)
-
-    /// Delayed start for the transition of the blur layer component of the overlay when Gallery is being presented.
-    case blurPresentDelay(TimeInterval)
-
     /// Transition duration for the color layer component of the overlay when Gallery is being presented.
     case colorPresentDuration(TimeInterval)
 
@@ -88,12 +82,6 @@ public enum GalleryConfigurationItem {
 
     /// Delayed start for decoration views transition (fade-in) when Gallery is being presented.
     case decorationViewsPresentDelay(TimeInterval)
-
-    /// Transition duration for the blur layer component of the overlay when Gallery is being dismissed.
-    case blurDismissDuration(TimeInterval)
-
-    /// Transition delay for the blur layer component of the overlay when Gallery is being dismissed.
-    case blurDismissDelay(TimeInterval)
 
     /// Transition duration for the color layer component of the overlay when Gallery is being dismissed.
     case colorDismissDuration(TimeInterval)
@@ -131,12 +119,6 @@ public enum GalleryConfigurationItem {
     /// Base color of the overlay layer that is mostly visible when images are displaced (gallery is being presented), rotated and interactively dismissed.
     case overlayColor(UIColor)
 
-    /// Allows to select the overall tone on the B&W scale of the blur layer in the overlay.
-    case overlayBlurStyle(UIBlurEffect.Style)
-
-    /// The opacity of overlay layer when the displacement effect finishes anf the gallery is fully presented. Valid values are from 0 to 1 where 1 is full opacity i.e the overlay layer is fully opaque, 0 is completely transparent and effectively invisible.
-    case overlayBlurOpacity(CGFloat)
-
     /// The opacity of overlay layer when the displacement effect finishes anf the gallery is fully presented. Valid values are from 0 to 1 where 1 is full opacity i.e the overlay layer is fully opaque, 0 is completely transparent and effectively invisible.
     case overlayColorOpacity(CGFloat)
 
@@ -157,6 +139,12 @@ public enum GalleryConfigurationItem {
 
     /// Tint color of video controls
     case videoControlsColor(UIColor)
+    
+    /// Header view visibility mode
+    case headerViewVisible(VisibilityMode)
+    
+    /// Footer view visibility mode
+    case footerViewVisible(VisibilityMode)
 }
 
 public enum GalleryRotationMode {
@@ -171,6 +159,11 @@ public enum ButtonMode {
     case none
     case builtIn /// Standard Close or Thumbnails button.
     case custom(UIButton)
+}
+
+public enum VisibilityMode {
+    case none
+    case visible
 }
 
 public enum GalleryPagingMode {
