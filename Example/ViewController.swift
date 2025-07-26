@@ -11,20 +11,18 @@ import UIKit
 extension UIImageView: DisplaceableView {}
 
 struct DataItem {
-
     let imageView: UIImageView
     let galleryItem: GalleryItem
 }
 
 class ViewController: UIViewController {
-
-    @IBOutlet weak var image1: UIImageView!
-    @IBOutlet weak var image2: UIImageView!
-    @IBOutlet weak var image3: UIImageView!
-    @IBOutlet weak var image4: UIImageView!
-    @IBOutlet weak var image5: UIImageView!
-    @IBOutlet weak var image6: UIImageView!
-    @IBOutlet weak var image7: UIImageView!
+    @IBOutlet var image1: UIImageView!
+    @IBOutlet var image2: UIImageView!
+    @IBOutlet var image3: UIImageView!
+    @IBOutlet var image4: UIImageView!
+    @IBOutlet var image5: UIImageView!
+    @IBOutlet var image6: UIImageView!
+    @IBOutlet var image7: UIImageView!
 
     var items: [DataItem] = []
 
@@ -34,23 +32,21 @@ class ViewController: UIViewController {
         let imageViews = [image1, image2, image3, image4, image5, image6, image7]
 
         for (index, imageView) in imageViews.enumerated() {
-
             guard let imageView = imageView else { continue }
             var galleryItem: GalleryItem!
 
             switch index {
-
             case 2:
 
-                galleryItem = GalleryItem.video(fetchPreviewImageBlock: { $0(UIImage(named: "2")!) }, videoURL: URL (string: "http://video.dailymail.co.uk/video/mol/test/2016/09/21/5739239377694275356/1024x576_MP4_5739239377694275356.mp4")!)
+                galleryItem = GalleryItem.video(fetchPreviewImageBlock: { $0(UIImage(named: "2")!) }, videoURL: URL(string: "http://video.dailymail.co.uk/video/mol/test/2016/09/21/5739239377694275356/1024x576_MP4_5739239377694275356.mp4")!)
 
             case 4:
 
                 let myFetchImageBlock: FetchImageBlock = { $0(imageView.image!) }
 
-                let itemViewControllerBlock: ItemViewControllerBlock = { index, itemCount, fetchImageBlock, configuration, isInitialController in
+                let itemViewControllerBlock: ItemViewControllerBlock = { index, itemCount, _, configuration, isInitialController in
 
-                    return AnimatedViewController(index: index, itemCount: itemCount, fetchImageBlock: myFetchImageBlock, configuration: configuration, isInitialController: isInitialController)
+                    AnimatedViewController(index: index, itemCount: itemCount, fetchImageBlock: myFetchImageBlock, configuration: configuration, isInitialController: isInitialController)
                 }
 
                 galleryItem = GalleryItem.custom(fetchImageBlock: myFetchImageBlock, itemViewControllerBlock: itemViewControllerBlock)
@@ -66,7 +62,6 @@ class ViewController: UIViewController {
     }
 
     @IBAction func showGalleryImageViewer(_ sender: UITapGestureRecognizer) {
-
         guard let displacedView = sender.view as? UIImageView else { return }
 
         guard let displacedViewIndex = items.firstIndex(where: { $0.imageView == displacedView }) else { return }
@@ -93,13 +88,11 @@ class ViewController: UIViewController {
             footerView.currentIndex = index
         }
 
-        self.presentImageGallery(galleryViewController)
+        presentImageGallery(galleryViewController)
     }
 
     func galleryConfiguration() -> GalleryConfiguration {
-
         return [
-
             GalleryConfigurationItem.closeButtonMode(.builtIn),
 
             GalleryConfigurationItem.pagingMode(.standard),
@@ -114,7 +107,7 @@ class ViewController: UIViewController {
             GalleryConfigurationItem.overlayColorOpacity(1),
             GalleryConfigurationItem.overlayBlurOpacity(1),
             GalleryConfigurationItem.overlayBlurStyle(UIBlurEffect.Style.light),
-            
+
             GalleryConfigurationItem.videoControlsColor(.white),
 
             GalleryConfigurationItem.maximumZoomScale(8),
@@ -143,36 +136,29 @@ class ViewController: UIViewController {
 
             GalleryConfigurationItem.statusBarHidden(true),
             GalleryConfigurationItem.displacementKeepOriginalInPlace(false),
-            GalleryConfigurationItem.displacementInsetMargin(50)
+            GalleryConfigurationItem.displacementInsetMargin(50),
         ]
     }
 }
 
 extension ViewController: GalleryDisplacedViewsDataSource {
-
     func provideDisplacementItem(atIndex index: Int) -> DisplaceableView? {
-
         return index < items.count ? items[index].imageView : nil
     }
 }
 
 extension ViewController: GalleryItemsDataSource {
-
     func itemCount() -> Int {
-
         return items.count
     }
 
     func provideGalleryItem(_ index: Int) -> GalleryItem {
-
         return items[index].galleryItem
     }
 }
 
 extension ViewController: GalleryItemsDelegate {
-
     func removeGalleryItem(at index: Int) {
-
         print("remove item at \(index)")
 
         let imageView = items[index].imageView
@@ -182,9 +168,7 @@ extension ViewController: GalleryItemsDelegate {
 }
 
 // Some external custom UIImageView we want to show in the gallery
-class FLSomeAnimatedImage: UIImageView {
-}
+class FLSomeAnimatedImage: UIImageView {}
 
 // Extend ImageBaseController so we get all the functionality for free
-class AnimatedViewController: ItemBaseController<FLSomeAnimatedImage> {
-}
+class AnimatedViewController: ItemBaseController<FLSomeAnimatedImage> {}

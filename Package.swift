@@ -8,11 +8,13 @@ let package = Package(
     products: [
         .library(
             name: "ImageViewer",
-            targets: ["ImageViewer"]),
+            targets: ["ImageViewer"]
+        ),
     ],
     targets: [
         .target(
             name: "ImageViewer",
-            path: "ImageViewer")
+            path: "ImageViewer"
+        ),
     ]
 )

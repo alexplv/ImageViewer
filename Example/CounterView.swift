@@ -1,5 +1,5 @@
 //
-//  ImageCounterView.swift
+//  CounterView.swift
 //  Money
 //
 //  Created by Kristian Angyal on 07/03/2016.
@@ -9,7 +9,6 @@
 import UIKit
 
 class CounterView: UIView {
-
     var count: Int
     let countLabel = UILabel()
     var currentIndex: Int {
@@ -19,7 +18,6 @@ class CounterView: UIView {
     }
 
     init(frame: CGRect, currentIndex: Int, count: Int) {
-
         self.currentIndex = currentIndex
         self.count = count
 
@@ -29,18 +27,17 @@ class CounterView: UIView {
         updateLabel()
     }
 
-    required init?(coder aDecoder: NSCoder) {
+    @available(*, unavailable)
+    required init?(coder _: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
 
     func configureLabel() {
-
         countLabel.textAlignment = .center
-        self.addSubview(countLabel)
+        addSubview(countLabel)
     }
 
     func updateLabel() {
-
         let stringTemplate = "%d of %d"
         let countString = String(format: stringTemplate, arguments: [currentIndex + 1, count])
 
@@ -50,6 +47,6 @@ class CounterView: UIView {
     override func layoutSubviews() {
         super.layoutSubviews()
 
-        countLabel.frame = self.bounds
+        countLabel.frame = bounds
     }
 }
