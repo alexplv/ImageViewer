@@ -55,6 +55,13 @@ open class GalleryViewController: UIPageViewController, ItemControllerDelegate {
     fileprivate let swipeToDismissFadeOutAccelerationFactor: CGFloat = 6
     fileprivate var decorationViewsFadeDuration = 0.15
     fileprivate var displacementDuration = 0.15
+    
+    // MARK: - Performance Optimization Properties
+    
+    /// Store configuration for lazy processing
+    fileprivate let deferredConfiguration: GalleryConfiguration
+    fileprivate var configurationProcessed = false
+    fileprivate var continueNextVideoOnFinish = false
     /// COMPLETION BLOCKS
     /// If set, the block is executed right after the initial launch animations
     /// finish.
@@ -85,10 +92,71 @@ open class GalleryViewController: UIPageViewController, ItemControllerDelegate {
         currentIndex = startIndex
         self.itemsDelegate = itemsDelegate
         self.itemsDataSource = itemsDataSource
-        var continueNextVideoOnFinish = false
+        deferredConfiguration = configuration
+        
+        pagingDataSource = GalleryPagingDataSource(
+            itemsDataSource: itemsDataSource,
+            displacedViewsDataSource: displacedViewsDataSource,
+            scrubber: scrubber, configuration: configuration
+        )
+        super.init(
+            transitionStyle: UIPageViewController.TransitionStyle.scroll,
+            navigationOrientation: UIPageViewController.NavigationOrientation
+                .horizontal,
+            options: [
+                UIPageViewController.OptionsKey.interPageSpacing: NSNumber(
+                    value: spineDividerWidth as Float
+                ),
+            ]
+        )
+        pagingDataSource.itemControllerDelegate = self
+        /// This feels out of place, one would expect even the first
+        /// presented(paged) item controller to be provided by the paging
+        /// dataSource but there is nothing we can do as Apple requires the
+        /// first controller to be set via this "setViewControllers" method.
+        let initialController = pagingDataSource.createItemController(
+            startIndex,
+            isInitial: true
+        )
+        setViewControllers(
+            [initialController],
+            direction: UIPageViewController.NavigationDirection.forward,
+            animated: false, completion: nil
+        )
+        if let controller = initialController as? ItemController {
+            initialItemController = controller
+        }
+        /// This less known/used presentation style option allows the contents
+        /// of parent view controller presenting the gallery to "bleed through"
+        /// the blurView. Otherwise we would see only black color.
+        modalPresentationStyle = .overFullScreen
+        dataSource = pagingDataSource
+        UIApplication.applicationWindow.windowLevel =
+            statusBarHidden ? UIWindow.Level.statusBar + 1 : UIWindow.Level
+                .normal
+        NotificationCenter.default.addObserver(
+            self, selector: #selector(GalleryViewController.rotate),
+            name: UIDevice.orientationDidChangeNotification, object: nil
+        )
+        if continueNextVideoOnFinish {
+            NotificationCenter.default.addObserver(
+                self, selector: #selector(didEndPlaying),
+                name: NSNotification.Name.AVPlayerItemDidPlayToEndTime,
+                object: nil
+            )
+        }
+    }
+
+    deinit { NotificationCenter.default.removeObserver(self) }
+    
+    /// Process configuration items - called lazily in viewDidLoad for better performance
+    private func processConfiguration() {
+        guard !configurationProcessed else { return }
+        configurationProcessed = true
+        
         /// Only those options relevant to the paging GalleryViewController are
         /// explicitly handled here, the rest is handled by ItemViewControllers
-        for item in configuration {
+        for item in deferredConfiguration {
             switch item {
             case let .imageDividerWidth(width): spineDividerWidth = Float(width)
             case let .pagingMode(mode): galleryPagingMode = mode
@@ -150,50 +218,7 @@ open class GalleryViewController: UIPageViewController, ItemControllerDelegate {
             default: break
             }
         }
-        pagingDataSource = GalleryPagingDataSource(
-            itemsDataSource: itemsDataSource,
-            displacedViewsDataSource: displacedViewsDataSource,
-            scrubber: scrubber, configuration: configuration
-        )
-        super.init(
-            transitionStyle: UIPageViewController.TransitionStyle.scroll,
-            navigationOrientation: UIPageViewController.NavigationOrientation
-                .horizontal,
-            options: [
-                UIPageViewController.OptionsKey.interPageSpacing: NSNumber(
-                    value: spineDividerWidth as Float
-                ),
-            ]
-        )
-        pagingDataSource.itemControllerDelegate = self
-        /// This feels out of place, one would expect even the first
-        /// presented(paged) item controller to be provided by the paging
-        /// dataSource but there is nothing we can do as Apple requires the
-        /// first controller to be set via this "setViewControllers" method.
-        let initialController = pagingDataSource.createItemController(
-            startIndex,
-            isInitial: true
-        )
-        setViewControllers(
-            [initialController],
-            direction: UIPageViewController.NavigationDirection.forward,
-            animated: false, completion: nil
-        )
-        if let controller = initialController as? ItemController {
-            initialItemController = controller
-        }
-        /// This less known/used presentation style option allows the contents
-        /// of parent view controller presenting the gallery to "bleed through"
-        /// the blurView. Otherwise we would see only black color.
-        modalPresentationStyle = .overFullScreen
-        dataSource = pagingDataSource
-        UIApplication.applicationWindow.windowLevel =
-            statusBarHidden ? UIWindow.Level.statusBar + 1 : UIWindow.Level
-                .normal
-        NotificationCenter.default.addObserver(
-            self, selector: #selector(GalleryViewController.rotate),
-            name: UIDevice.orientationDidChangeNotification, object: nil
-        )
+        
         if continueNextVideoOnFinish {
             NotificationCenter.default.addObserver(
                 self, selector: #selector(didEndPlaying),
@@ -202,8 +227,6 @@ open class GalleryViewController: UIPageViewController, ItemControllerDelegate {
             )
         }
     }
-
-    deinit { NotificationCenter.default.removeObserver(self) }
     @objc func didEndPlaying() { page(toIndex: currentIndex + 1) }
     fileprivate func configureOverlayView() {
         overlayView.bounds.size =
@@ -274,6 +297,10 @@ open class GalleryViewController: UIPageViewController, ItemControllerDelegate {
 
     override open func viewDidLoad() {
         super.viewDidLoad()
+        
+        // Process configuration lazily for better performance
+        processConfiguration()
+        
         if #available(iOS 11.0, *) {
             if statusBarHidden || UIScreen.hasNotch {
                 additionalSafeAreaInsets = UIEdgeInsets(
